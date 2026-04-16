@@ -1,0 +1,47 @@
+# llm-knowledge-studio configuration
+# All paths are relative to the project root unless they start with /
+
+[paths]
+raw_dir    = "data/raw"
+wiki_dir   = "data/wiki"
+outputs_dir = "data/outputs"
+prompts_dir = "prompts"
+
+[llm]
+# Set api_key here OR export OPENAI_API_KEY / LLM_API_KEY in the shell.
+# Env-var values always override config-file values.
+api_key   = ""            # leave blank to use env var
+model     = "gpt-4o-mini"
+base_url  = ""            # leave blank for OpenAI default
+timeout   = 30
+max_retries = 2
+
+[wiki]
+# Maximum number of characters passed from each raw file to the LLM
+max_context_chars = 4000
+# Required sections that every wiki page must contain
+required_sections = [
+    "## Definition",
+    "## Key Ideas",
+    "## How it Works",
+    "## Connections",
+    "## Sources",
+]
+# Minimum word count before a page is flagged as "very short"
+min_page_words = 30
+
+[topics]
+# Seed topics for grouping.  When a file's first H1 heading matches one of
+# these labels (case-insensitive) it is placed in that bucket directly,
+# bypassing the LLM topic call.  Add your own domain labels here.
+seed_labels = [
+    "Artificial Intelligence",
+    "Machine Learning",
+    "Productivity",
+    "Knowledge Management",
+    "Software Engineering",
+    "Data Science",
+]
+# Maximum topic label length (in words) the LLM is allowed to return.
+# Responses longer than this are truncated to their first two words.
+max_label_words = 3
