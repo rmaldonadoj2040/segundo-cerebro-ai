@@ -1,8 +1,8 @@
 """Quick smoke-test for the LLM connection.
 
 Usage:
-  OPENAI_API_KEY=mock python scripts/test_llm.py     # mock mode (no API call)
-  OPENAI_API_KEY=sk-...  python scripts/test_llm.py  # real API call
+  OPENAI_API_KEY=mock python3 scripts/test_llm.py       # mock mode
+  OPENAI_API_KEY=<key> python3 scripts/test_llm.py      # real API call
 """
 
 from __future__ import annotations

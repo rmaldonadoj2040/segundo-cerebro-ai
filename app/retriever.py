@@ -18,7 +18,7 @@ import logging
 import re
 from pathlib import Path
 
-from app.file_utils import list_markdown_files, read_text
+from app.file_utils import list_markdown_files_recursive, read_text
 
 LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +104,17 @@ def _score(query: str, keywords: list[str], doc_text: str) -> float:
 # ── Public API ───────────────────────────────────────────────────────────────
 
 _INDEX_FILENAMES: frozenset[str] = frozenset(
-    {"topics_index.md", "sources_index.md", "open_questions.md"}
+    {
+        "topics_index.md",
+        "sources_index.md",
+        "open_questions.md",
+        "indice_de_temas.md",
+        "indice_de_fuentes.md",
+        "preguntas_abiertas.md",
+        "resumen_de_insights.md",
+        "inicio.md",
+        "capturas.md",
+    }
 )
 
 
@@ -136,7 +146,7 @@ def retrieve(
         Returns multiple pages if possible, applying a diversity penalty.
     """
     wiki_files = [
-        f for f in list_markdown_files(wiki_dir) if f.name not in _INDEX_FILENAMES
+        f for f in list_markdown_files_recursive(wiki_dir) if f.name.lower() not in _INDEX_FILENAMES
     ]
 
     if not wiki_files:

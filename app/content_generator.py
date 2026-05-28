@@ -13,7 +13,11 @@ from app.retriever import retrieve
 LOGGER = logging.getLogger(__name__)
 
 
-def build_content(topic_or_question: str) -> Path | None:
+def build_content(
+    topic_or_question: str,
+    wiki_dir: Path | None = None,
+    output_dir: Path | None = None,
+) -> Path | None:
     """Generate repurposed content (IG reel, X thread, business insight).
 
     Retrieves relevant wiki pages for *topic_or_question*, then asks the LLM
@@ -27,8 +31,12 @@ def build_content(topic_or_question: str) -> Path | None:
     """
     ensure_project_dirs()
     cfg = _cfg()
+    if wiki_dir is None:
+        wiki_dir = cfg.wiki_dir
+    if output_dir is None:
+        output_dir = cfg.contenido_dir
 
-    matches = retrieve(topic_or_question, cfg.wiki_dir)
+    matches = retrieve(topic_or_question, wiki_dir)
 
     prompt_file = cfg.prompts_dir / "content_from_wiki.md"
     if prompt_file.exists():
@@ -67,12 +75,11 @@ def build_content(topic_or_question: str) -> Path | None:
         LOGGER.info("Generating content for: %s using concepts from: %s", topic_or_question, source_names)
         content = generate(full_prompt)
 
-        out_dir = cfg.outputs_dir / "content"
-        out_dir.mkdir(parents=True, exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         # Deterministic filename: derived from topic, not timestamp
-        out_path = out_dir / f"{slugify(topic_or_question[:60])}.md"
-        final_text = f"# Content: {topic_or_question}\n\n{content}\n"
+        out_path = output_dir / f"{slugify(topic_or_question[:60])}.md"
+        final_text = f"# Contenido: {topic_or_question}\n\n{content}\n"
         write_text(out_path, final_text)
 
         LOGGER.info("Content saved → %s", out_path)

@@ -1,9 +1,4 @@
-"""Summarize raw markdown files.
-
-Summaries are written to ``data/outputs/summaries/`` (not adjacent to raw
-files) so that ``data/raw/`` stays clean and ``list_markdown_files`` never
-accidentally picks up generated files.
-"""
+"""Summarize captured markdown files into the configured summaries directory."""
 
 from __future__ import annotations
 
@@ -36,7 +31,7 @@ def summarize_file(path: Path, out_dir: Path | None = None) -> Path | None:
     Args:
         path:    The raw markdown file to summarise.
         out_dir: Directory where the summary is written.
-                 Defaults to ``data/outputs/summaries/``.
+                 Defaults to the configured summaries directory.
 
     Returns:
         Path to the written summary file, or *None* on failure.
@@ -75,7 +70,7 @@ def summarize_all(raw_dir: Path | None = None) -> list[Path]:
 
     Args:
         raw_dir: Directory containing raw markdown files.
-                 Defaults to ``data/raw/``.
+                 Defaults to the configured captures directory.
 
     Returns:
         List of paths to written summary files.

@@ -8,7 +8,7 @@ Checks performed on every wiki concept page:
      next heading or end-of-file with no intervening content.
   4. **TODO placeholder** — lines containing ``TODO`` or ``FIXME``.
 
-The report is written to ``data/outputs/reports/wiki_health.md``.
+The report is written to ``outputs/reports/wiki_health.md``.
 The function returns ``(report_path, issue_count)`` so callers can propagate
 a non-zero exit code when the wiki has problems.
 """
@@ -24,7 +24,17 @@ from app.file_utils import ensure_project_dirs, list_markdown_files, read_text, 
 LOGGER = logging.getLogger(__name__)
 
 _SPECIAL_FILES: frozenset[str] = frozenset(
-    {"topics_index.md", "sources_index.md", "open_questions.md"}
+    {
+        "topics_index.md",
+        "sources_index.md",
+        "open_questions.md",
+        "indice_de_temas.md",
+        "indice_de_fuentes.md",
+        "preguntas_abiertas.md",
+        "resumen_de_insights.md",
+        "inicio.md",
+        "capturas.md",
+    }
 )
 
 
@@ -78,8 +88,19 @@ def lint_wiki() -> tuple[Path, int]:
     ensure_project_dirs()
     cfg = _cfg()
 
-    wiki_files = list_markdown_files(cfg.wiki_dir)
-    concept_files = [f for f in wiki_files if f.name not in _SPECIAL_FILES]
+    note_dirs = (
+        cfg.conceptos_dir,
+        cfg.autores_dir,
+        cfg.libros_dir,
+        cfg.tecnologias_dir,
+        cfg.tensiones_dir,
+    )
+    concept_files = [
+        path
+        for directory in note_dirs
+        for path in list_markdown_files(directory)
+        if path.name.lower() not in _SPECIAL_FILES
+    ]
 
     report_lines: list[str] = ["# Wiki Health Report\n"]
     total_issues = 0

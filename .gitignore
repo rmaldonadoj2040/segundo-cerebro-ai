@@ -1,13 +1,47 @@
+# Local environment
 .env
+.env.*
+!.env.example
 .venv/
 venv/
+Virtual
+environments
+
+# Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-data/raw/*
-!data/raw/.gitkeep
-data/wiki/*
-!data/wiki/.gitkeep
-data/outputs/*
-!data/outputs/.gitkeep
+# OS / editor noise
+.DS_Store
+**/.DS_Store
+.vscode/
+.idea/
+.gitignore#
+
+# User data and generated artifacts
+data/capturas/*
+!data/capturas/.gitkeep
+data/archivo/*
+!data/archivo/.gitkeep
+vault/*
+!vault/.gitkeep
+outputs/*
+!outputs/.gitkeep
+demo_workspace/
+
+# Local backups / migration scratch
+backups/
+backup_before_*/
+app_backup_before_*/
+scripts_backup_before_*/
+
+# Local-only docs and legacy scratch notes
+CLAUDE.md
+DEMO_IG.md
+GUIA_DE_USO.md
+GUIA_SEGUNDO_CEREBRO.md
+SPANISH_WIKI_GUIDE.md
+scripts/migrate_to_spanish_mvp.py

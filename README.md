@@ -1,168 +1,246 @@
-# LLM Knowledge Studio
+# llm-knowledge-studio
 
-A CLI-first, markdown-first knowledge management tool.
-Drop in raw Markdown notes → get a structured wiki, keyword Q&A, and repurposed content — all powered by an LLM.
+`llm-knowledge-studio` is an experimental, local-first AI knowledge system. It
+ingests Markdown notes, normalizes them into Spanish, extracts a small ontology
+of concepts/authors/books/technologies/tensions, and generates an
+Obsidian-compatible vault.
 
-No databases.  No web servers.  Just files.
+It is meant for people who want to turn scattered reading notes, transcripts,
+and research fragments into a navigable second brain. It is not a database, a
+vector-search product, a private hosted service, or a replacement for careful
+source review.
 
----
+## What It Generates
 
-## Five-minute quickstart
+- `vault/` — the generated Obsidian vault
+- `vault/conceptos/` — concept notes
+- `vault/autores/` — author/thinker notes
+- `vault/libros/` — book or historical idea notes
+- `vault/tecnologias/` — technology/platform notes
+- `vault/tensiones/` — tension notes such as `Velocidad vs Profundidad`
+- `vault/Inicio.md` — dashboard for navigation
+- `vault/indice_de_temas.md` — index by node type
+- `vault/indice_de_fuentes.md` — source attribution index
+- `outputs/` — generated content, answers, daily summaries, and lint reports
+- `data/archivo/` — archived originals and normalized captures
+
+Generated files may include text derived from your private notes. Do not commit
+`data/`, `vault/`, `outputs/`, or `demo_workspace/` unless you have reviewed
+the contents and intentionally want to publish them.
+
+## Install
+
+Requirements:
+
+- Python 3.11+ recommended
+- An OpenAI API key, an OpenAI-compatible local endpoint, or mock mode
 
 ```bash
-# 1. Clone & set up a virtual environment (Python 3.11+ recommended)
-git clone <repo-url> && cd llm-knowledge-studio
-python3.11 -m venv .venv && source .venv/bin/activate
+git clone <repo-url>
+cd llm-knowledge-studio
+python3.11 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-
-# 2. Configure credentials
 cp .env.example .env
-# Edit .env and set OPENAI_API_KEY=mock  (zero-cost dry-run)
-# or  OPENAI_API_KEY=sk-...             (real API)
-
-# 3. Run the full pipeline
-python scripts/ingest_file.py examples/sample_raw.md   # copies file to data/raw/
-python scripts/compile_wiki.py                          # builds wiki pages in data/wiki/
-python scripts/build_index.py                           # indexes topics + open questions
-python scripts/ask.py "What is retrieval augmented generation?"
-python scripts/lint.py                                  # quality-checks the wiki
 ```
 
-That's it.  All outputs land in `data/`.
-
----
-
-## Folder layout
-
-```
-llm-knowledge-studio/
-├── config.toml          ← paths, model name, topic seeds, quality thresholds
-├── .env                 ← your API key (gitignored)
-├── app/                 ← library modules (import these, don't run directly)
-│   ├── config.py        ← config loader (reads config.toml + env vars)
-│   ├── llm_client.py    ← OpenAI-compatible LLM wrapper (mock-safe)
-│   ├── file_utils.py    ← I/O helpers
-│   ├── retriever.py     ← keyword retrieval (stop-word filtered, ranked)
-│   ├── summarizer.py    ← summarize raw notes
-│   ├── wiki_compiler.py ← compile raw notes → structured wiki pages
-│   ├── wiki_linter.py   ← structural quality checks on wiki pages
-│   ├── qa_engine.py     ← answer questions from wiki context
-│   └── content_generator.py ← repurpose wiki content (IG, X thread, insight)
-├── scripts/             ← CLI entry-points (run these directly)
-│   ├── ingest_file.py
-│   ├── summarize.py
-│   ├── compile_wiki.py
-│   ├── build_index.py
-│   ├── ask.py
-│   ├── generate_content.py
-│   ├── lint.py
-│   └── test_llm.py
-├── prompts/             ← plain-text LLM system prompts (edit freely)
-├── data/
-│   ├── raw/             ← your raw Markdown notes (input)
-│   ├── wiki/            ← compiled wiki pages (auto-generated)
-│   └── outputs/
-│       ├── answers/     ← saved Q&A responses
-│       ├── content/     ← generated content pieces
-│       ├── summaries/   ← file summaries
-│       └── reports/     ← wiki health reports
-└── examples/            ← sample files to try the pipeline
-```
-
----
-
-## Scripts reference
-
-| Script | What it does |
-|---|---|
-| `ingest_file.py <path> [--name]` | Copy a Markdown file into `data/raw/` |
-| `summarize.py [--source <file>]` | Summarize raw notes → `data/outputs/summaries/` |
-| `compile_wiki.py [--source <file>]` | Compile notes → wiki pages in `data/wiki/` |
-| `build_index.py` | Build topic/source index + open questions |
-| `ask.py "<question>"` | Answer a question from wiki context |
-| `generate_content.py "<topic>"` | Generate IG reel, X thread, and insight |
-| `lint.py` | Check wiki pages for missing sections/empty content |
-| `test_llm.py` | Smoke-test the LLM connection |
-
----
-
-## Configuration
-
-`config.toml` is the single source of truth for all settings:
-
-```toml
-[paths]
-raw_dir     = "data/raw"
-wiki_dir    = "data/wiki"
-outputs_dir = "data/outputs"
-
-[llm]
-model       = "gpt-4o-mini"
-timeout     = 30
-max_retries = 2
-
-[topics]
-# Files whose H1 heading matches a seed label skip the LLM topic call.
-seed_labels = ["Artificial Intelligence", "Productivity", ...]
-
-[wiki]
-required_sections = ["## Definition", "## Key Ideas", ...]
-min_page_words    = 30
-max_context_chars = 4000
-```
-
-Environment variables always override `config.toml`:
-
-| Variable | Purpose |
-|---|---|
-| `OPENAI_API_KEY` | API key (`mock` for dry-run) |
-| `LLM_MODEL` | Model name override |
-| `LLM_BASE_URL` | Base URL for OpenAI-compatible proxies / local servers |
-
----
-
-## Using a local model (Ollama, LM Studio, etc.)
+For a zero-cost local run, keep:
 
 ```bash
-# In .env:
-OPENAI_API_KEY=ollama   # any non-empty non-"mock" string
+OPENAI_API_KEY=mock
+```
+
+For real generation, set:
+
+```bash
+OPENAI_API_KEY=your_api_key_here
+LLM_MODEL=gpt-4o-mini
+```
+
+For Ollama, LM Studio, or another OpenAI-compatible server:
+
+```bash
+OPENAI_API_KEY=local-placeholder
 LLM_BASE_URL=http://localhost:11434/v1
 LLM_MODEL=llama3
 ```
 
-The client is a thin wrapper around `openai.OpenAI`, which is compatible
-with any server that implements the OpenAI chat-completions API.
+The project uses `tomllib` on Python 3.11+. On Python 3.10, `tomli` is installed
+from `requirements.txt`. If you see `tomllib / tomli not available`, install
+dependencies or use Python 3.11+.
 
----
+## Demo
 
-## Topic grouping
-
-Files are grouped into wiki topics using a two-tier strategy:
-
-1. **Seed label match** (deterministic) — if the file's `# Heading` matches
-   an entry in `config.toml [topics] seed_labels`, that label is used with
-   no LLM call.
-2. **LLM fallback** — for unmatched files, the LLM returns a 1-3 word label
-   which is normalised (title-cased, truncated) before grouping.
-
-Add domain-specific labels to `seed_labels` to make grouping stable and
-free for your most common topics.
-
----
-
-## Mock mode (no API key required)
-
-Set `OPENAI_API_KEY=mock` in `.env` or the shell.  All LLM calls return
-deterministic stub responses so you can validate the full pipeline locally
-without spending tokens.
-
----
-
-## Adding your own notes
+The safest first run is the isolated demo:
 
 ```bash
-python scripts/ingest_file.py ~/notes/my-topic.md
-python scripts/compile_wiki.py --source data/raw/my-topic.md
-python scripts/build_index.py
-python scripts/ask.py "What is my topic about?"
+python3 scripts/run_demo.py
 ```
+
+This writes only to `demo_workspace/`, uses `examples/sample_docs/`, validates
+the generated vault, and asks one example question. See [DEMO.md](DEMO.md).
+
+## Basic Workflow
+
+Add Markdown captures:
+
+```bash
+python3 scripts/ingest_file.py path/to/note.md
+```
+
+Run the pipeline:
+
+```bash
+python3 scripts/run_daily.py --verbose
+```
+
+Validate the vault:
+
+```bash
+python3 scripts/validate_vault.py
+```
+
+Ask a grounded question:
+
+```bash
+python3 scripts/ask.py "¿Qué tensión aparece entre velocidad y profundidad?"
+```
+
+Open `vault/` in Obsidian and start with `Inicio.md`.
+
+## Command Reference
+
+| Command | Purpose |
+|---|---|
+| `python3 scripts/ingest_file.py <file.md>` | Copy a Markdown file into `data/capturas/` |
+| `python3 scripts/run_daily.py --verbose` | Normalize captures, build the vault, generate dashboards, archive processed captures |
+| `python3 scripts/build_index.py` | Rebuild dashboards from existing vault entity notes |
+| `python3 scripts/validate_vault.py` | Check for broken links, ghost nodes, short notes, and graph config issues |
+| `python3 scripts/ask.py "<question>"` | Answer a question using retrieved vault notes |
+| `python3 scripts/lint.py` | Write a structural lint report to `outputs/reports/wiki_health.md` |
+| `python3 scripts/run_demo.py` | Run a mock demo in `demo_workspace/` |
+| `python3 scripts/reset_demo.py` | Reset only `demo_workspace/` |
+
+`scripts/compile_wiki.py` is kept for compatibility and delegates to
+`scripts/run_daily.py`.
+
+## Configuration
+
+Defaults live in `config.toml`. Environment variables override the file.
+
+Required or common variables:
+
+| Variable | Purpose |
+|---|---|
+| `OPENAI_API_KEY` | API key. Use `mock` for deterministic offline responses. |
+| `LLM_MODEL` | Model name. Defaults to `gpt-4o-mini`. |
+| `LLM_BASE_URL` | Optional OpenAI-compatible endpoint. |
+
+Optional path overrides for demos/CI:
+
+| Variable | Default |
+|---|---|
+| `LLMKS_CAPTURES_DIR` | `data/capturas` |
+| `LLMKS_KNOWLEDGE_MAP_DIR` | `vault` |
+| `LLMKS_OUTPUTS_DIR` | `outputs` |
+| `LLMKS_ARCHIVE_ORIGINALS_DIR` | `data/archivo/originales` |
+| `LLMKS_ARCHIVE_NORMALIZED_DIR` | `data/archivo/normalizado` |
+
+## Repository Layout
+
+```text
+llm-knowledge-studio/
+├── app/                  # Python library code
+├── scripts/              # CLI entry points
+├── prompts/              # LLM prompts
+├── examples/sample_docs/ # Public demo input documents
+├── tests/                # Minimal regression tests
+├── config.toml           # Default configuration
+├── .env.example          # Environment template
+├── DEMO.md               # Demo instructions
+└── README.md
+```
+
+Generated/user-local folders are intentionally gitignored:
+
+```text
+data/capturas/
+data/archivo/
+vault/
+outputs/
+demo_workspace/
+backups/
+```
+
+## Reset Generated Data
+
+For the demo only:
+
+```bash
+python3 scripts/reset_demo.py
+```
+
+For your real workspace, delete generated folders manually only after reviewing
+that they contain no data you need:
+
+```bash
+rm -rf vault outputs data/archivo
+mkdir -p data/capturas data/archivo vault outputs
+```
+
+## Safety and Privacy
+
+This project runs locally, but LLM calls may send note content to the configured
+API endpoint. Use `OPENAI_API_KEY=mock` for offline testing. Before publishing
+or sharing a generated vault, review `vault/`, `outputs/`, and `data/archivo/`
+for private names, quotes, URLs, or source text.
+
+Keep `.env` private. Commit `.env.example`, not `.env`.
+
+## Tests
+
+Run the demo validation:
+
+```bash
+python3 scripts/run_demo.py
+```
+
+Run unit tests:
+
+```bash
+python3 -m unittest discover tests
+```
+
+## Known Limitations
+
+- Spanish-first output; multilingual workflows are not fully designed.
+- Retrieval is keyword-based, not vector search.
+- There is no database or hosted UI.
+- LLM output quality depends on the model and prompts.
+- The ontology planner is intentionally small; large corpora may need batching.
+- Generated Markdown can contain sensitive source-derived text.
+
+## Roadmap
+
+- Improve test coverage for ingestion, validation, retrieval, and config.
+- Add safer cleanup commands with confirmation.
+- Add richer docs for prompt customization.
+- Add optional screenshots for the generated Obsidian graph.
+- Explore multilingual configuration without breaking the Spanish-first path.
+
+## Troubleshooting
+
+`No hay nuevas capturas para procesar.`
+: Add Markdown files to `data/capturas/` or use `scripts/ingest_file.py`.
+
+`No LLM API key found.`
+: Set `OPENAI_API_KEY=mock` for local testing or add a real key in `.env`.
+
+`tomllib / tomli not available`
+: Use Python 3.11+ or run `pip install -r requirements.txt`.
+
+Validation reports broken links or ghost nodes.
+: Re-run `python3 scripts/run_daily.py --verbose`, then `python3 scripts/validate_vault.py`.
+
+Obsidian graph shows dashboard files.
+: Run `python3 scripts/build_index.py`; it rewrites `.obsidian/graph.json`.

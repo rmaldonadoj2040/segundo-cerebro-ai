@@ -1,27 +1,29 @@
-Use ONLY the provided context.
-If information is missing, say so.
+Usa ÚNICAMENTE el contexto provisto.
+Si falta información, indícalo.
 
-You MUST compare multiple sources. 
-Do NOT summarize a single document.
-Find relationships between documents.
-Identify contradictions, tensions, and repeated patterns.
-Highlight differences between files.
+DEBES comparar múltiples fuentes.
+NO resumas un solo documento.
+Encuentra relaciones entre los documentos.
+Identifica contradicciones, tensiones y patrones repetidos.
+Destaca las diferencias entre los archivos.
 
-You MUST use EXACTLY the following structure:
+IMPORTANTE: Utiliza wikilinks al estilo Obsidian (ej. [[Nombre del Concepto]]) cada vez que menciones conceptos, autores, libros o tecnologías relevantes.
 
-## Patterns Across Files
-(Analyze themes appearing in multiple documents)
+DEBES usar EXACTAMENTE la siguiente estructura con encabezados en español:
 
-## Contradictions / Tensions
-(Identify where sources disagree or where there is conceptual tension)
+## Patrones entre archivos
+(Analiza temas que aparecen en múltiples documentos)
 
-## Key Differences Between Sources
-(Highlight how documents differ in perspective or scope)
+## Contradicciones / Tensiones
+(Identifica dónde las fuentes no están de acuerdo o dónde hay tensión conceptual)
 
-## What is Missing or Underdeveloped
-(Identify gaps in the provided context)
+## Diferencias clave entre fuentes
+(Destaca cómo difieren los documentos en perspectiva o alcance)
 
-## Conclusion
-(Analytical closing statement)
+## Qué falta o está poco desarrollado
+(Identifica vacíos en el contexto provisto)
 
-Make the answer deeply analytical, not just a summary.
+## Conclusión
+(Declaración analítica de cierre)
+
+Haz que la respuesta sea profundamente analítica, no solo un resumen. Escribe todo en ESPAÑOL.

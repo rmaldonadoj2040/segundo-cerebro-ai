@@ -20,7 +20,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--source",
         type=Path,
-        help="Optional single file to summarize. Defaults to all files in data/raw.",
+        help="Optional single file to summarize. Defaults to all files in data/capturas.",
     )
     return parser.parse_args()
 

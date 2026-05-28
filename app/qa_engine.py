@@ -13,10 +13,14 @@ from app.retriever import retrieve
 LOGGER = logging.getLogger(__name__)
 
 
-def ask_question(question: str) -> Path | None:
+def ask_question(
+    question: str,
+    wiki_dir: Path | None = None,
+    output_dir: Path | None = None,
+) -> Path | None:
     """Answer *question* by retrieving relevant wiki pages and calling the LLM.
 
-    The answer is saved to ``data/outputs/answers/<slug>.md``.  The filename
+    The answer is saved to ``outputs/respuestas/<slug>.md``.  The filename
     is derived from the question text (not a timestamp) so that repeated calls
     with the same question overwrite the previous answer rather than creating
     an ever-growing pile of files.
@@ -26,13 +30,17 @@ def ask_question(question: str) -> Path | None:
     """
     ensure_project_dirs()
     cfg = _cfg()
+    if wiki_dir is None:
+        wiki_dir = cfg.wiki_dir
+    if output_dir is None:
+        output_dir = cfg.respuestas_dir
 
-    matches = retrieve(question, cfg.wiki_dir, top_k=5)
+    matches = retrieve(question, wiki_dir, top_k=5)
 
     if len(matches) < 3:
         LOGGER.warning("Only %d source(s) found. Expanding retrieval to ensure comparison.", len(matches))
         # Expand retrieval by lowering min_score and increasing top_k slightly
-        matches = retrieve(question, cfg.wiki_dir, top_k=8, min_score=0.1)
+        matches = retrieve(question, wiki_dir, top_k=8, min_score=0.1)
 
     prompt_file = cfg.prompts_dir / "answer_question.md"
     if prompt_file.exists():
@@ -40,35 +48,43 @@ def ask_question(question: str) -> Path | None:
         system_prompt = read_text(prompt_file).strip()
     else:
         system_prompt = (
-            "You MUST compare multiple sources. Find relationships, contradictions, and patterns."
+            "DEBES comparar múltiples fuentes. Encuentra relaciones, contradicciones y patrones. Responde en ESPAÑOL y usa wikilinks."
         )
 
     context_blocks = []
     for path, text in matches:
         context_blocks.append(f"Source: {path.name}\n---\n{text}\n---")
-    
+
     context = "\n\n".join(context_blocks)
 
     full_prompt = (
         f"{system_prompt}\n\n"
-        f"Question: {question}\n\n"
-        f"Context:\n{context}"
+        f"Pregunta: {question}\n\n"
+        f"Contexto:\n{context}"
     )
 
     try:
         source_names = [p.name for p, _ in matches]
         if len(source_names) < 2:
             LOGGER.warning("Context grounded in only ONE source: %s. Analysis may be limited.", source_names)
-        
+
         LOGGER.info("Generating analytical answer to: %s using files: %s", question, source_names)
         answer = generate(full_prompt)
 
-        out_dir = cfg.outputs_dir / "answers"
-        out_dir.mkdir(parents=True, exist_ok=True)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         # Deterministic filename: derived from question, not timestamp
-        out_path = out_dir / f"{slugify(question[:60])}.md"
-        content = f"# Q: {question}\n\n{answer}\n"
+        out_path = output_dir / f"{slugify(question[:60])}.md"
+
+        frontmatter = (
+            "---\n"
+            "type: respuesta\n"
+            f"audience: {cfg.generation_audience}\n"
+            f"status: {cfg.generation_status}\n"
+            "publishable: no\n"
+            "---\n"
+        )
+        content = f"{frontmatter}# Pregunta: {question}\n\n{answer}\n"
         write_text(out_path, content)
 
         LOGGER.info("Answer saved → %s", out_path)

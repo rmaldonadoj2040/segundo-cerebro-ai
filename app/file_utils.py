@@ -43,9 +43,27 @@ def __getattr__(name: str) -> Path:
 # ── Directory helpers ────────────────────────────────────────────────────────
 
 def ensure_project_dirs() -> None:
-    """Create the expected data directories if they do not exist."""
+    """Create the expected data directories if they do not exist.
+
+    Under clean graph mode, only ``conceptos`` is a vault subdirectory —
+    tensions, insights and questions are embedded into dashboards, not files.
+    """
     cfg = _cfg()
-    for directory in (cfg.raw_dir, cfg.wiki_dir, cfg.outputs_dir, cfg.summaries_dir):
+    for directory in (
+        cfg.captures_dir,
+        cfg.knowledge_map_dir,
+        cfg.outputs_dir,
+        cfg.archive_originals_dir,
+        cfg.archive_normalized_dir,
+        cfg.conceptos_dir,
+        cfg.autores_dir,
+        cfg.libros_dir,
+        cfg.tecnologias_dir,
+        cfg.tensiones_dir,
+        cfg.respuestas_dir,
+        cfg.contenido_dir,
+        cfg.descubrimientos_dir,
+    ):
         directory.mkdir(parents=True, exist_ok=True)
 
 
@@ -81,9 +99,21 @@ def list_markdown_files(directory: Path) -> list[Path]:
     )
 
 
+def list_markdown_files_recursive(directory: Path) -> list[Path]:
+    """Return Markdown files in a directory tree, sorted by relative path."""
+    if not directory.exists():
+        return []
+    return sorted(
+        path
+        for path in directory.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".md", ".markdown"}
+    )
+
+
 # ── String helpers ───────────────────────────────────────────────────────────
 
-_SLUG_RE = re.compile(r"[^a-zA-Z0-9]+")
+_NON_WORD_RE = re.compile(r"[^\w\s-]", re.UNICODE)
+_SPACE_RE = re.compile(r"[-\s_]+", re.UNICODE)
 
 
 def slugify(value: str) -> str:
@@ -98,7 +128,8 @@ def slugify(value: str) -> str:
     >>> slugify("  ")
     'untitled'
     """
-    slug = _SLUG_RE.sub("-", value).strip("-").lower()
+    cleaned = _NON_WORD_RE.sub("", value).strip().lower()
+    slug = _SPACE_RE.sub("-", cleaned).strip("-")
     return slug or "untitled"
 
 

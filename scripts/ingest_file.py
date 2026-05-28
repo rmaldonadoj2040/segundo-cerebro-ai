@@ -1,4 +1,4 @@
-"""Copy a Markdown source file into data/raw."""
+"""Copy a Markdown source file into the configured captures directory."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from app.file_utils import ingest_source_file
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Ingest a Markdown file into data/raw.")
+    parser = argparse.ArgumentParser(description="Ingest a Markdown file into data/capturas.")
     parser.add_argument("source", type=Path, help="Path to the Markdown file to ingest.")
     parser.add_argument("--name", help="Optional destination filename (with or without .md).")
     return parser.parse_args()

@@ -1,44 +1,26 @@
-"""Compile raw Markdown files into structured wiki pages."""
+"""Deprecated entry point — kept for backwards compatibility.
+
+Concept compilation now requires the registry-backed two-phase pipeline
+(plan concepts → compile → derive → repair).  That whole flow lives in
+``run_daily.py``; there is no longer a standalone per-file compiler.
+
+Running this script simply delegates to the daily pipeline.
+"""
 
 from __future__ import annotations
 
-import argparse
-import logging
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from app.file_utils import RAW_DIR, WIKI_DIR, ensure_project_dirs
-from app.wiki_compiler import compile_all, compile_file
-
-
-def parse_args() -> argparse.Namespace:
-    """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Compile raw Markdown into wiki pages.")
-    parser.add_argument("--source", type=Path, help="Optional single raw Markdown file to compile.")
-    return parser.parse_args()
+from scripts.run_daily import main as run_daily_main
 
 
 def main() -> None:
-    """Run the wiki compiler."""
-    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-    ensure_project_dirs()
-    args = parse_args()
-
-    if args.source:
-        source = args.source.expanduser()
-        if not source.is_absolute():
-            source = ROOT / source if (ROOT / source).exists() else RAW_DIR / source
-        outputs = [compile_file(source, wiki_dir=WIKI_DIR)]
-    else:
-        outputs = compile_all(raw_dir=RAW_DIR, wiki_dir=WIKI_DIR)
-
-    if not outputs:
-        logging.info("No raw Markdown files found in %s", RAW_DIR)
-        return
-    logging.info("Compiled %d wiki page(s).", len(outputs))
+    print("compile_wiki.py is deprecated — delegating to run_daily.py")
+    run_daily_main()
 
 
 if __name__ == "__main__":

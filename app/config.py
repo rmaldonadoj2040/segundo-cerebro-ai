@@ -70,11 +70,52 @@ class Config:
 
         # ── Paths ────────────────────────────────────────────────────────────
         paths = raw.get("paths", {})
-        self.raw_dir: Path = root / paths.get("raw_dir", "data/raw")
-        self.wiki_dir: Path = root / paths.get("wiki_dir", "data/wiki")
-        self.outputs_dir: Path = root / paths.get("outputs_dir", "data/outputs")
-        self.prompts_dir: Path = root / paths.get("prompts_dir", "prompts")
-        self.summaries_dir: Path = self.outputs_dir / "summaries"
+
+        def _path(env_name: str, config_name: str, default: str) -> Path:
+            value = os.getenv(env_name) or paths.get(config_name, default)
+            path = Path(value).expanduser()
+            return path if path.is_absolute() else root / path
+
+        # New paths
+        self.captures_dir: Path = _path("LLMKS_CAPTURES_DIR", "captures", "data/capturas")
+        self.knowledge_map_dir: Path = _path("LLMKS_KNOWLEDGE_MAP_DIR", "knowledge_map", "vault")
+        self.outputs_dir: Path = _path("LLMKS_OUTPUTS_DIR", "outputs", "outputs")
+        self.archive_originals_dir: Path = _path(
+            "LLMKS_ARCHIVE_ORIGINALS_DIR",
+            "archive_originals",
+            "data/archivo/originales",
+        )
+        self.archive_normalized_dir: Path = _path(
+            "LLMKS_ARCHIVE_NORMALIZED_DIR",
+            "archive_normalized",
+            "data/archivo/normalizado",
+        )
+
+        self.prompts_dir: Path = _path("LLMKS_PROMPTS_DIR", "prompts_dir", "prompts")
+
+        # New outputs
+        self.respuestas_dir: Path = self.outputs_dir / "respuestas"
+        self.contenido_dir: Path = self.outputs_dir / "contenido"
+        self.descubrimientos_dir: Path = self.outputs_dir / "descubrimientos-diarios"
+
+        # Entity-type directories (each becomes a graph cluster).
+        self.conceptos_dir: Path = self.knowledge_map_dir / "conceptos"
+        self.autores_dir: Path = self.knowledge_map_dir / "autores"
+        self.libros_dir: Path = self.knowledge_map_dir / "libros"
+        self.tecnologias_dir: Path = self.knowledge_map_dir / "tecnologias"
+        self.tensiones_dir: Path = self.knowledge_map_dir / "tensiones"
+
+        # Legacy directories (insights / preguntas are embedded in dashboards,
+        # not graph nodes — kept only so old tooling does not crash).
+        self.insights_dir: Path = self.knowledge_map_dir / "insights"
+        self.preguntas_dir: Path = self.knowledge_map_dir / "preguntas"
+
+        # Legacy aliases (to avoid breaking old code if used)
+        self.inbox_dir: Path = self.captures_dir
+        self.raw_dir: Path = self.captures_dir
+        self.wiki_dir: Path = self.knowledge_map_dir
+        self.summaries_dir: Path = self.descubrimientos_dir
+        self.runs_dir: Path = self.descubrimientos_dir
 
         # ── LLM ──────────────────────────────────────────────────────────────
         llm = raw.get("llm", {})
@@ -117,3 +158,9 @@ class Config:
         topics = raw.get("topics", {})
         self.seed_labels: list[str] = topics.get("seed_labels", [])
         self.max_label_words: int = int(topics.get("max_label_words", 3))
+
+        # ── Generation settings ──────────────────────────────────────────────────
+        generation = raw.get("generation", {})
+        self.generation_language: str = generation.get("language", "Spanish")
+        self.generation_audience: str = generation.get("audience", "spanish")
+        self.generation_status: str = generation.get("status", "active")
