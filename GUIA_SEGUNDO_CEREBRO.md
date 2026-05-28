@@ -8,7 +8,7 @@
 > al final hay una sección **"Si te trabas"** con la solución a los errores más comunes.
 
 **Repositorio (el código vive aquí):**
-👉 https://github.com/rmaldonadoj2040/llm-knowledge-studio
+👉 https://github.com/rmaldonadoj2040/segundo-cerebro-ai
 
 ---
 
