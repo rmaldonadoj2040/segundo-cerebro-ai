@@ -43,7 +43,7 @@ scripts_backup_before_*/
 # Local-only docs and legacy scratch notes
 CLAUDE.md
 DEMO_IG.md
-GUIA_SEGUNDO_CEREBRO.md
+
 GUIA_SEGUNDO_CEREBRO.pdf
 SPANISH_WIKI_GUIDE.md
 scripts/migrate_to_spanish_mvp.py
