@@ -1,5 +1,5 @@
-# llm-knowledge-studio configuration (Spanish Edition MVP)
-# Configuración de llm-knowledge-studio - Edición en Español MVP
+# Segundo Cerebro AI configuration (Spanish Edition MVP)
+# Configuración de Segundo Cerebro AI - Edición en Español MVP
 # All paths are relative to the project root unless they start with /
 
 [language]
@@ -20,7 +20,7 @@ create_dashboard = true
 spanish_titles = true
 
 [product]
-name = "Mapa Mental IA"
+name = "Segundo Cerebro AI"
 positioning = "Un segundo cerebro que conecta automáticamente todo lo que aprendes."
 
 [llm]

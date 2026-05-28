@@ -1,4 +1,4 @@
-"""Core application package for llm-knowledge-studio.
+"""Core application package for Segundo Cerebro AI.
 
 Loads ``.env`` from the project root automatically when the package is
 first imported.  This means every ``scripts/*.py`` entry-point gets the

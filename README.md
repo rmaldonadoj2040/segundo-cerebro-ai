@@ -1,6 +1,8 @@
-# llm-knowledge-studio
+# Segundo Cerebro AI
 
-`llm-knowledge-studio` is an experimental, local-first AI knowledge system. It
+Español: consulta la [Guía de uso](GUIA_DE_USO.md).
+
+`Segundo Cerebro AI` is an experimental, local-first AI knowledge system. It
 ingests Markdown notes, normalizes them into Spanish, extracts a small ontology
 of concepts/authors/books/technologies/tensions, and generates an
 Obsidian-compatible vault.
@@ -36,8 +38,8 @@ Requirements:
 - An OpenAI API key, an OpenAI-compatible local endpoint, or mock mode
 
 ```bash
-git clone <repo-url>
-cd llm-knowledge-studio
+git clone https://github.com/rmaldonadoj2040/segundo-cerebro-ai.git
+cd segundo-cerebro-ai
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -149,7 +151,7 @@ Optional path overrides for demos/CI:
 ## Repository Layout
 
 ```text
-llm-knowledge-studio/
+segundo-cerebro-ai/
 ├── app/                  # Python library code
 ├── scripts/              # CLI entry points
 ├── prompts/              # LLM prompts

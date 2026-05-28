@@ -1,8 +1,8 @@
-# llm-knowledge-studio Project Documentation
+# Segundo Cerebro AI Project Documentation
 
 ## Project Overview
 
-**llm-knowledge-studio** is a markdown-to-wiki compilation system that transforms raw markdown files into a structured, navigable knowledge base optimized for Spanish-speaking users in [Obsidian](https://obsidian.md/).
+**Segundo Cerebro AI** is a markdown-to-wiki compilation system that transforms raw markdown files into a structured, navigable knowledge base optimized for Spanish-speaking users in [Obsidian](https://obsidian.md/).
 
 **Tech Stack:**
 - Python 3.11+ (tomllib support for TOML)
