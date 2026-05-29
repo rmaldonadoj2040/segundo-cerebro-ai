@@ -108,6 +108,7 @@ _INDEX_FILENAMES: frozenset[str] = frozenset(
         "topics_index.md",
         "sources_index.md",
         "open_questions.md",
+        "insights_summary.md",
         "indice_de_temas.md",
         "indice_de_fuentes.md",
         "preguntas_abiertas.md",

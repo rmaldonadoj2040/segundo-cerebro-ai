@@ -74,18 +74,18 @@ lo usaremos al final.
 Tienes dos formas. Elige la que te resulte más cómoda.
 
 **Opción A — Descargar el ZIP (más fácil, sin comandos):**
-1. Entra a https://github.com/rmaldonadoj2040/llm-knowledge-studio
+1. Entra a https://github.com/rmaldonadoj2040/segundo-cerebro-ai
 2. Botón verde **"Code"** → **"Download ZIP"**.
 3. Descomprime el ZIP en una carpeta fácil de encontrar (ej. tu Escritorio).
 
 **Opción B — Con git (si ya lo tienes instalado):**
 ```bash
-git clone https://github.com/rmaldonadoj2040/llm-knowledge-studio.git
+git clone https://github.com/rmaldonadoj2040/segundo-cerebro-ai.git
 ```
 
 Ahora **entra a la carpeta del proyecto** desde la terminal:
 ```bash
-cd llm-knowledge-studio
+cd segundo-cerebro-ai
 ```
 
 > 💡 Tip: si no sabes la ruta, escribe `cd ` (con espacio) y **arrastra la carpeta**
@@ -180,7 +180,7 @@ Si termina diciendo **"Demo complete."**, ¡felicidades! El sistema funciona en 
 máquina. 🎉
 
 Para verlo: abre Obsidian → **"Open folder as vault"** → elige la carpeta
-`demo_workspace/vault/`. Abre `Inicio.md` y activa la **Vista de Grafo** para ver
+`demo_workspace/data/wiki/`. Abre `topics_index.md` y activa la **Vista de Grafo** para ver
 las ideas conectadas.
 
 ---
@@ -193,8 +193,10 @@ Ahora sí, con tus propias notas.
 Edita `.env` y pon tu llave de OpenAI (ver Paso 3, Modo 2).
 
 ### 5.2 Mete tus notas al sistema
-Por cada archivo de texto (`.md`) que quieras agregar:
+Por cada archivo de texto (`.md`) que quieras agregar, cópialo a la carpeta de entrada:
 ```bash
+cp ruta/a/tu-nota.md data/inbox/
+# o alternativamente:
 python3 scripts/ingest_file.py ruta/a/tu-nota.md
 ```
 > ¿No tienes archivos `.md`? Crea uno simple: abre cualquier editor, pega tus
@@ -205,8 +207,8 @@ python3 scripts/ingest_file.py ruta/a/tu-nota.md
 ```bash
 python3 scripts/run_daily.py --verbose
 ```
-Esto normaliza tus notas, extrae conceptos, los conecta y construye tu vault en
-la carpeta `vault/`.
+Esto normaliza tus notas, extrae conceptos, los conecta y construye tu wiki en
+la carpeta `data/wiki/`.
 
 ### 5.4 Revisa que todo quedó bien
 ```bash
@@ -219,8 +221,8 @@ Te avisa si hay enlaces rotos o notas vacías.
 ## Paso 6 — Ábrelo en Obsidian
 
 1. Abre Obsidian.
-2. **"Open folder as vault"** → elige la carpeta `vault/` del proyecto.
-3. Empieza por `Inicio.md` (es tu tablero principal).
+2. **"Open folder as vault"** → elige la carpeta `data/wiki/` del proyecto.
+3. Empieza por `topics_index.md` (es tu tablero principal).
 4. Haz clic en los enlaces `[[así]]` para navegar entre ideas.
 5. Abre la **Vista de Grafo** (ícono de círculos conectados) y mira tu cerebro. 🕸️
 
@@ -268,14 +270,14 @@ Casi siempre es la versión de Python. Asegúrate de tener **3.11 o más nuevo**
 (`python3 --version`) y vuelve a correr `pip install -r requirements.txt`.
 
 **`No hay nuevas capturas para procesar.`**
-No has metido notas todavía. Usa `python3 scripts/ingest_file.py tu-nota.md`.
+No has metido notas todavía. Copia tus notas a `data/inbox/` o usa `python3 scripts/ingest_file.py tu-nota.md`.
 
 **No veo `(.venv)` en la terminal**
 No activaste el entorno. Corre de nuevo el comando de activación del Paso 2.
 
 **Obsidian no muestra los enlaces conectados**
-Asegúrate de abrir la carpeta correcta como vault (`vault/`, o `demo_workspace/vault/`
-para la demo) y empieza por `Inicio.md`.
+Asegúrate de abrir la carpeta correcta como vault (`data/wiki/`, o `demo_workspace/data/wiki/`
+para la demo) y empieza por `topics_index.md`.
 
 **La terminal me pide la ruta de un archivo y no la sé**
 Arrastra el archivo o la carpeta desde el explorador hacia la terminal: pega la

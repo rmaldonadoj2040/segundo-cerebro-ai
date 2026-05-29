@@ -45,13 +45,13 @@ def __getattr__(name: str) -> Path:
 def ensure_project_dirs() -> None:
     """Create the expected data directories if they do not exist.
 
-    Under clean graph mode, only ``conceptos`` is a vault subdirectory —
-    tensions, insights and questions are embedded into dashboards, not files.
+    Under clean graph mode, each note type gets its own vault subdirectory.
     """
     cfg = _cfg()
     for directory in (
-        cfg.captures_dir,
-        cfg.knowledge_map_dir,
+        cfg.inbox_dir,
+        cfg.raw_dir,
+        cfg.wiki_dir,
         cfg.outputs_dir,
         cfg.archive_originals_dir,
         cfg.archive_normalized_dir,
@@ -60,6 +60,8 @@ def ensure_project_dirs() -> None:
         cfg.libros_dir,
         cfg.tecnologias_dir,
         cfg.tensiones_dir,
+        cfg.insights_dir,
+        cfg.preguntas_dir,
         cfg.respuestas_dir,
         cfg.contenido_dir,
         cfg.descubrimientos_dir,
@@ -152,6 +154,6 @@ def ingest_source_file(source: Path, name: str | None = None) -> Path:
     destination_name = name or source.name
     if Path(destination_name).suffix == "":
         destination_name = f"{destination_name}.md"
-    destination = _cfg().raw_dir / destination_name
+    destination = _cfg().inbox_dir / destination_name
     shutil.copy2(source, destination)
     return destination

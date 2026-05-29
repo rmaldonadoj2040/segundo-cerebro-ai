@@ -37,6 +37,42 @@ _SPECIAL_FILES: frozenset[str] = frozenset(
     }
 )
 
+_REQUIRED_SECTIONS_BY_FOLDER: dict[str, list[str]] = {
+    "conceptos": [
+        "## Qué significa",
+        "## Por qué importa",
+        "## Conexiones",
+        "## Insight clave",
+        "## Pregunta abierta",
+        "## Fuentes",
+    ],
+    "autores": [
+        "## Quién es",
+        "## Idea central",
+        "## Conexiones",
+        "## Fuentes",
+    ],
+    "libros": [
+        "## Qué propone",
+        "## Por qué importa",
+        "## Conexiones",
+        "## Fuentes",
+    ],
+    "tecnologias": [
+        "## Qué es",
+        "## Efecto cognitivo",
+        "## Conexiones",
+        "## Fuentes",
+    ],
+    "tensiones": [
+        "## La tensión",
+        "## Polo A",
+        "## Polo B",
+        "## Conexiones",
+        "## Fuentes",
+    ],
+}
+
 
 def _check_page(path: Path, text: str, required_sections: list[str], min_words: int) -> list[str]:
     """Return a list of issue strings for *path*.  Empty list means no issues."""
@@ -113,7 +149,7 @@ def lint_wiki() -> tuple[Path, int]:
             issues = _check_page(
                 path,
                 text,
-                cfg.required_sections,
+                _REQUIRED_SECTIONS_BY_FOLDER.get(path.parent.name, cfg.required_sections),
                 cfg.min_page_words,
             )
             total_issues += len(issues)

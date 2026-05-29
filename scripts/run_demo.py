@@ -19,11 +19,11 @@ def _demo_env() -> dict[str, str]:
         {
             "OPENAI_API_KEY": "mock",
             "LLM_MODEL": env.get("LLM_MODEL", "gpt-4o-mini"),
-            "LLMKS_CAPTURES_DIR": str(DEMO_ROOT / "capturas"),
-            "LLMKS_KNOWLEDGE_MAP_DIR": str(DEMO_ROOT / "vault"),
+            "LLMKS_INBOX_DIR": str(DEMO_ROOT / "data" / "inbox"),
+            "LLMKS_WIKI_DIR": str(DEMO_ROOT / "data" / "wiki"),
             "LLMKS_OUTPUTS_DIR": str(DEMO_ROOT / "outputs"),
-            "LLMKS_ARCHIVE_ORIGINALS_DIR": str(DEMO_ROOT / "archivo" / "originales"),
-            "LLMKS_ARCHIVE_NORMALIZED_DIR": str(DEMO_ROOT / "archivo" / "normalizado"),
+            "LLMKS_ARCHIVE_ORIGINALS_DIR": str(DEMO_ROOT / "data" / "archivo" / "originales"),
+            "LLMKS_ARCHIVE_NORMALIZED_DIR": str(DEMO_ROOT / "data" / "archivo" / "normalizado"),
         }
     )
     return env
@@ -37,11 +37,11 @@ def _run(args: list[str], env: dict[str, str]) -> None:
 def main() -> None:
     if DEMO_ROOT.exists():
         shutil.rmtree(DEMO_ROOT)
-    captures_dir = DEMO_ROOT / "capturas"
-    captures_dir.mkdir(parents=True, exist_ok=True)
+    inbox_dir = DEMO_ROOT / "data" / "inbox"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
 
     for source in sorted(SAMPLE_DOCS.glob("*.md")):
-        shutil.copy2(source, captures_dir / source.name)
+        shutil.copy2(source, inbox_dir / source.name)
 
     env = _demo_env()
     _run([sys.executable, "scripts/run_daily.py", "--verbose"], env)
@@ -57,7 +57,7 @@ def main() -> None:
 
     print()
     print("Demo complete.")
-    print(f"Vault: {DEMO_ROOT / 'vault'}")
+    print(f"Wiki: {DEMO_ROOT / 'data' / 'wiki'}")
     print(f"Answers: {DEMO_ROOT / 'outputs' / 'respuestas'}")
 
 

@@ -14,20 +14,21 @@ source review.
 
 ## What It Generates
 
-- `vault/` — the generated Obsidian vault
-- `vault/conceptos/` — concept notes
-- `vault/autores/` — author/thinker notes
-- `vault/libros/` — book or historical idea notes
-- `vault/tecnologias/` — technology/platform notes
-- `vault/tensiones/` — tension notes such as `Velocidad vs Profundidad`
-- `vault/Inicio.md` — dashboard for navigation
-- `vault/indice_de_temas.md` — index by node type
-- `vault/indice_de_fuentes.md` — source attribution index
+- `data/wiki/` — the generated Obsidian vault
+- `data/wiki/conceptos/` — concept notes
+- `data/wiki/autores/` — author/thinker notes
+- `data/wiki/libros/` — book or historical idea notes
+- `data/wiki/tecnologias/` — technology/platform notes
+- `data/wiki/tensiones/` — tension notes such as `Velocidad vs Profundidad`
+- `data/wiki/insights/` — generated insight notes
+- `data/wiki/preguntas/` — generated question notes
+- `data/wiki/topics_index.md` — dashboard for navigation
+- `data/wiki/sources_index.md` — source attribution index
 - `outputs/` — generated content, answers, daily summaries, and lint reports
 - `data/archivo/` — archived originals and normalized captures
 
 Generated files may include text derived from your private notes. Do not commit
-`data/`, `vault/`, `outputs/`, or `demo_workspace/` unless you have reviewed
+`data/`, `outputs/`, or `demo_workspace/` unless you have reviewed
 the contents and intentionally want to publish them.
 
 ## Install
@@ -108,13 +109,13 @@ Ask a grounded question:
 python3 scripts/ask.py "¿Qué tensión aparece entre velocidad y profundidad?"
 ```
 
-Open `vault/` in Obsidian and start with `Inicio.md`.
+Open `data/wiki/` in Obsidian and start with `topics_index.md`.
 
 ## Command Reference
 
 | Command | Purpose |
 |---|---|
-| `python3 scripts/ingest_file.py <file.md>` | Copy a Markdown file into `data/capturas/` |
+| `python3 scripts/ingest_file.py <file.md>` | Copy a Markdown file into `data/inbox/` |
 | `python3 scripts/run_daily.py --verbose` | Normalize captures, build the vault, generate dashboards, archive processed captures |
 | `python3 scripts/build_index.py` | Rebuild dashboards from existing vault entity notes |
 | `python3 scripts/validate_vault.py` | Check for broken links, ghost nodes, short notes, and graph config issues |
@@ -142,11 +143,14 @@ Optional path overrides for demos/CI:
 
 | Variable | Default |
 |---|---|
-| `LLMKS_CAPTURES_DIR` | `data/capturas` |
-| `LLMKS_KNOWLEDGE_MAP_DIR` | `vault` |
+| `LLMKS_INBOX_DIR` | `data/inbox` |
+| `LLMKS_WIKI_DIR` | `data/wiki` |
 | `LLMKS_OUTPUTS_DIR` | `outputs` |
 | `LLMKS_ARCHIVE_ORIGINALS_DIR` | `data/archivo/originales` |
 | `LLMKS_ARCHIVE_NORMALIZED_DIR` | `data/archivo/normalizado` |
+
+Legacy aliases `LLMKS_CAPTURES_DIR` and `LLMKS_KNOWLEDGE_MAP_DIR` are still
+accepted for older scripts, but new setups should use the names above.
 
 ## Repository Layout
 
@@ -166,9 +170,10 @@ segundo-cerebro-ai/
 Generated/user-local folders are intentionally gitignored:
 
 ```text
-data/capturas/
+data/inbox/
+data/raw/
+data/wiki/
 data/archivo/
-vault/
 outputs/
 demo_workspace/
 backups/
@@ -186,15 +191,15 @@ For your real workspace, delete generated folders manually only after reviewing
 that they contain no data you need:
 
 ```bash
-rm -rf vault outputs data/archivo
-mkdir -p data/capturas data/archivo vault outputs
+rm -rf data/wiki outputs data/archivo
+mkdir -p data/inbox data/raw data/wiki data/archivo outputs
 ```
 
 ## Safety and Privacy
 
 This project runs locally, but LLM calls may send note content to the configured
 API endpoint. Use `OPENAI_API_KEY=mock` for offline testing. Before publishing
-or sharing a generated vault, review `vault/`, `outputs/`, and `data/archivo/`
+or sharing a generated vault, review `data/wiki/`, `outputs/`, and `data/archivo/`
 for private names, quotes, URLs, or source text.
 
 Keep `.env` private. Commit `.env.example`, not `.env`.
@@ -233,7 +238,7 @@ python3 -m unittest discover tests
 ## Troubleshooting
 
 `No hay nuevas capturas para procesar.`
-: Add Markdown files to `data/capturas/` or use `scripts/ingest_file.py`.
+: Add Markdown files to `data/inbox/` or use `scripts/ingest_file.py`.
 
 `No LLM API key found.`
 : Set `OPENAI_API_KEY=mock` for local testing or add a real key in `.env`.

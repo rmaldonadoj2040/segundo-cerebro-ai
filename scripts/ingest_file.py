@@ -15,7 +15,7 @@ from app.file_utils import ingest_source_file
 
 def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Ingest a Markdown file into data/capturas.")
+    parser = argparse.ArgumentParser(description="Ingest a Markdown file into data/inbox.")
     parser.add_argument("source", type=Path, help="Path to the Markdown file to ingest.")
     parser.add_argument("--name", help="Optional destination filename (with or without .md).")
     return parser.parse_args()

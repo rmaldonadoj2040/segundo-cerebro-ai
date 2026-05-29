@@ -1,19 +1,21 @@
-"""Strict vault validator (5-type ontology, clean graph mode).
+"""Strict vault validator (typed ontology, clean graph mode).
 
 Enforces two invariants for the Obsidian vault:
 
 1. **No ghost nodes.** Every ``[[wikilink]]`` resolves to a real file with
    substantial content.
-2. **Clean graph.** Graph nodes belong to exactly five entity folders —
-   ``conceptos``, ``autores``, ``libros``, ``tecnologias``, ``tensiones``.
-   Dashboards live at the vault root and are filtered out of the Graph View.
+2. **Clean graph.** Graph nodes belong to the expected entity folders:
+   ``conceptos``, ``autores``, ``libros``, ``tecnologias``, ``tensiones``,
+   ``insights`` and ``preguntas``. Dashboards live at the vault root and are
+   filtered out of the Graph View.
    Nothing else may exist as a Markdown file.
 
 A run passes (``Status: OK``, exit code 0) only when EVERY check is clean:
 
 - No 0-byte files / Obsidian placeholder files.
 - No "title-only" files (single H1 with no body).
-- No entity note shorter than ``MIN_BODY_CHARS`` chars (frontmatter excluded).
+- No entity note shorter than its configured content threshold
+  (frontmatter excluded).
 - No broken wikilinks.
 - No excessively long titles (more than ``MAX_TITLE_WORDS`` words).
 - No stray Markdown nodes outside the five entity folders.
@@ -40,15 +42,14 @@ from app.config import get as get_config
 MIN_BODY_CHARS = 200
 MAX_TITLE_WORDS = 10
 
-ENTITY_FOLDERS = {"conceptos", "autores", "libros", "tecnologias", "tensiones"}
+ENTITY_FOLDERS = {"conceptos", "autores", "libros", "tecnologias", "tensiones", "insights", "preguntas"}
 
 DASHBOARD_FILES = {
-    "inicio.md",
+    "topics_index.md",
     "capturas.md",
-    "indice_de_temas.md",
-    "indice_de_fuentes.md",
-    "resumen_de_insights.md",
-    "preguntas_abiertas.md",
+    "sources_index.md",
+    "insights_summary.md",
+    "open_questions.md",
 }
 
 _FRONTMATTER_RE = re.compile(r"\A---\n.*?\n---\n?", re.DOTALL)
@@ -73,9 +74,9 @@ def _read(path: Path) -> str:
         return path.read_text(encoding="latin-1")
 
 
-def _has_real_content(text: str) -> bool:
+def _has_real_content(text: str, min_chars: int = MIN_BODY_CHARS) -> bool:
     body = _strip_frontmatter(text).strip()
-    if len(body) < MIN_BODY_CHARS:
+    if len(body) < min_chars:
         return False
     non_blank = [ln for ln in body.splitlines() if ln.strip()]
     return len(non_blank) > 1
@@ -127,7 +128,9 @@ def validate(vault: Path | None = None) -> int:
     authorized: dict[str, Path] = {}
     for path in md_files:
         is_dashboard = path.name.lower() in DASHBOARD_FILES and path.parent == vault
-        if is_dashboard or _has_real_content(_read(path)):
+        parent_name = path.parent.name
+        min_required = 50 if parent_name in ("insights", "preguntas") else MIN_BODY_CHARS
+        if is_dashboard or _has_real_content(_read(path), min_required):
             authorized[_canonical(path.stem)] = path
             authorized[_canonical(path.relative_to(vault).with_suffix("").as_posix())] = path
 
@@ -164,8 +167,9 @@ def validate(vault: Path | None = None) -> int:
             empty.append(rel)
             continue
 
-        if not is_dashboard and len(body) < MIN_BODY_CHARS:
-            short.append((rel, len(body)))
+        min_required = 50 if parent_name in ("insights", "preguntas") else MIN_BODY_CHARS
+        if not is_dashboard and len(body) < min_required:
+            short.append((rel, len(body), min_required))
 
         if len(non_blank) <= 1 and non_blank[0].lstrip().startswith("#"):
             title_only.append(rel)
@@ -194,7 +198,7 @@ def validate(vault: Path | None = None) -> int:
     print(f"Vault path: {vault}")
     print(f"Files scanned: {len(md_files)}")
     print(f"Graph nodes: {total_nodes}")
-    for folder in ("conceptos", "autores", "libros", "tecnologias", "tensiones"):
+    for folder in ("conceptos", "autores", "libros", "tecnologias", "tensiones", "insights", "preguntas"):
         print(f"  - {folder}: {node_counts[folder]}")
     print(f"Graph config: {'OK' if graph_ok else 'FAIL'} — {graph_msg}")
     print()
@@ -208,7 +212,7 @@ def validate(vault: Path | None = None) -> int:
         print()
 
     _block("EMPTY / PLACEHOLDER FILES", empty, str)
-    _block("SHORT FILES", short, lambda p: f"{p[0]} ({p[1]} chars, need ≥ {MIN_BODY_CHARS})")
+    _block("SHORT FILES", short, lambda p: f"{p[0]} ({p[1]} chars, need ≥ {p[2]})")
     _block("TITLE-ONLY FILES", title_only, str)
     _block("BROKEN WIKILINKS", broken_links, lambda p: f"{p[0]}  →  [[{p[1]}]]")
     _block("VERY LONG TITLES", long_titles, str)

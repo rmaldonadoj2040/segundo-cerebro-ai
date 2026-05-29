@@ -24,6 +24,12 @@ __pycache__/
 .gitignore#
 
 # User data and generated artifacts
+data/inbox/*
+!data/inbox/.gitkeep
+data/raw/*
+!data/raw/.gitkeep
+data/wiki/*
+!data/wiki/.gitkeep
 data/capturas/*
 !data/capturas/.gitkeep
 data/archivo/*

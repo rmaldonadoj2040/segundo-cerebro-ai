@@ -1,7 +1,7 @@
 """Reset the isolated demo workspace.
 
 This removes only ``demo_workspace/``. It never touches the user's real
-``data/``, ``vault/`` or ``outputs/`` directories.
+``data/`` or ``outputs/`` directories.
 """
 
 from __future__ import annotations
@@ -17,11 +17,11 @@ def main() -> None:
     if DEMO_ROOT.exists():
         shutil.rmtree(DEMO_ROOT)
     for directory in (
-        DEMO_ROOT / "capturas",
-        DEMO_ROOT / "vault",
+        DEMO_ROOT / "data" / "inbox",
+        DEMO_ROOT / "data" / "wiki",
         DEMO_ROOT / "outputs",
-        DEMO_ROOT / "archivo" / "originales",
-        DEMO_ROOT / "archivo" / "normalizado",
+        DEMO_ROOT / "data" / "archivo" / "originales",
+        DEMO_ROOT / "data" / "archivo" / "normalizado",
     ):
         directory.mkdir(parents=True, exist_ok=True)
     print(f"Demo workspace reset: {DEMO_ROOT}")

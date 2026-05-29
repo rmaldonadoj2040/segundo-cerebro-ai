@@ -32,8 +32,8 @@ from app.normalize import normalize_to_spanish
 from app.wiki_compiler import (
     ENTITY_TYPES,
     compile_entity_notes,
-    generate_insights,
-    generate_questions,
+    generate_insights_from_concepts,
+    generate_questions_from_concepts,
     plan_ontology,
 )
 from scripts.build_index import build_indices, ensure_graph_config
@@ -73,8 +73,8 @@ def _note_title(path: Path) -> str:
 def _descubrimientos_content(
     processed_files: list[str],
     entity_paths: dict[str, list[Path]],
-    insights: list[dict],
-    questions: list[dict],
+    insights_paths: list[Path],
+    questions_paths: list[Path],
     content_path: Path,
     date_str: str,
 ) -> str:
@@ -99,17 +99,17 @@ def _descubrimientos_content(
         else:
             lines.append("_Sin entradas._")
 
-    def _data_section(title: str, items: list[dict], key: str) -> None:
+    def _data_section(title: str, items: list[Path]) -> None:
         lines.append("")
         lines.append(f"## {title}")
         if not items:
             lines.append("_Sin entradas._")
             return
         for item in items:
-            lines.append(f"- {item['title']}: {item[key]}")
+            lines.append(f"- {_note_title(item)}")
 
-    _data_section("Insights más interesantes", insights, "description")
-    _data_section("Preguntas abiertas", questions, "question")
+    _data_section("Insights más interesantes", insights_paths)
+    _data_section("Preguntas abiertas", questions_paths)
 
     lines.append("")
     lines.append("## Idea de contenido del día")
@@ -143,7 +143,7 @@ def main() -> None:
     capturas_files = list_markdown_files(cfg.captures_dir)
     if not capturas_files:
         print("No hay nuevas capturas para procesar.")
-        print("Agrega archivos Markdown en data/capturas/ y vuelve a correr el comando.")
+        print("Agrega archivos Markdown en data/inbox/ y vuelve a correr el comando.")
         sys.exit(0)
 
     if args.dry_run:
@@ -220,21 +220,19 @@ def main() -> None:
             if not entity_paths["concepto"]:
                 raise RuntimeError("No se compiló ningún concepto.")
 
-            # Insights and questions are dashboard data, never graph nodes.
+            # Insights and questions are now graph nodes (or separate notes)
             print("Generando insights...")
-            insights = generate_insights(registry)
-            print(f"  → {len(insights)} insights.")
+            insights_paths = generate_insights_from_concepts(registry, stage_map_dir / "insights")
+            print(f"  → {len(insights_paths)} insights.")
 
             print("Generando preguntas...")
-            questions = generate_questions(registry)
-            print(f"  → {len(questions)} preguntas.")
+            questions_paths = generate_questions_from_concepts(registry, stage_map_dir / "preguntas")
+            print(f"  → {len(questions_paths)} preguntas.")
 
             print("Construyendo dashboards...")
             build_indices(
                 registry=registry,
                 knowledge_map_dir=stage_map_dir,
-                insights=insights,
-                questions=questions,
             )
 
             print("Reparando wikilinks (no-ghost-node)...")
@@ -266,8 +264,8 @@ def main() -> None:
                 _descubrimientos_content(
                     [path.name for path in capturas_files],
                     entity_paths,
-                    insights,
-                    questions,
+                    insights_paths,
+                    questions_paths,
                     content_path,
                     today_str,
                 ),
@@ -309,7 +307,7 @@ def main() -> None:
         print("Pipeline completado.")
     except Exception as exc:
         print(f"Error durante el pipeline: {exc}")
-        print("Abortando. Las capturas permanecen intactas en data/capturas/.")
+        print("Abortando. Las capturas permanecen intactas en data/inbox/.")
         sys.exit(1)
 
 

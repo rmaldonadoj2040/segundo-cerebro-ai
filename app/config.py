@@ -71,14 +71,31 @@ class Config:
         # ── Paths ────────────────────────────────────────────────────────────
         paths = raw.get("paths", {})
 
-        def _path(env_name: str, config_name: str, default: str) -> Path:
-            value = os.getenv(env_name) or paths.get(config_name, default)
+        def _path(env_names: str | tuple[str, ...], config_name: str, default: str) -> Path:
+            if isinstance(env_names, str):
+                env_names = (env_names,)
+            value = None
+            for env_name in env_names:
+                value = os.getenv(env_name)
+                if value:
+                    break
+            value = value or paths.get(config_name, default)
             path = Path(value).expanduser()
             return path if path.is_absolute() else root / path
 
-        # New paths
-        self.captures_dir: Path = _path("LLMKS_CAPTURES_DIR", "captures", "data/capturas")
-        self.knowledge_map_dir: Path = _path("LLMKS_KNOWLEDGE_MAP_DIR", "knowledge_map", "vault")
+        # Canonical paths. Legacy env names are still accepted so older demos,
+        # CI jobs, and user shells do not silently fall back to defaults.
+        self.inbox_dir: Path = _path(
+            ("LLMKS_INBOX_DIR", "LLMKS_CAPTURES_DIR"),
+            "inbox",
+            "data/inbox",
+        )
+        self.raw_dir: Path = _path("LLMKS_RAW_DIR", "raw", "data/raw")
+        self.wiki_dir: Path = _path(
+            ("LLMKS_WIKI_DIR", "LLMKS_KNOWLEDGE_MAP_DIR"),
+            "wiki",
+            "data/wiki",
+        )
         self.outputs_dir: Path = _path("LLMKS_OUTPUTS_DIR", "outputs", "outputs")
         self.archive_originals_dir: Path = _path(
             "LLMKS_ARCHIVE_ORIGINALS_DIR",
@@ -98,22 +115,18 @@ class Config:
         self.contenido_dir: Path = self.outputs_dir / "contenido"
         self.descubrimientos_dir: Path = self.outputs_dir / "descubrimientos-diarios"
 
-        # Entity-type directories (each becomes a graph cluster).
-        self.conceptos_dir: Path = self.knowledge_map_dir / "conceptos"
-        self.autores_dir: Path = self.knowledge_map_dir / "autores"
-        self.libros_dir: Path = self.knowledge_map_dir / "libros"
-        self.tecnologias_dir: Path = self.knowledge_map_dir / "tecnologias"
-        self.tensiones_dir: Path = self.knowledge_map_dir / "tensiones"
-
-        # Legacy directories (insights / preguntas are embedded in dashboards,
-        # not graph nodes — kept only so old tooling does not crash).
-        self.insights_dir: Path = self.knowledge_map_dir / "insights"
-        self.preguntas_dir: Path = self.knowledge_map_dir / "preguntas"
+        # Entity-type directories (each becomes a graph cluster or node group).
+        self.conceptos_dir: Path = self.wiki_dir / "conceptos"
+        self.autores_dir: Path = self.wiki_dir / "autores"
+        self.libros_dir: Path = self.wiki_dir / "libros"
+        self.tecnologias_dir: Path = self.wiki_dir / "tecnologias"
+        self.tensiones_dir: Path = self.wiki_dir / "tensiones"
+        self.insights_dir: Path = self.wiki_dir / "insights"
+        self.preguntas_dir: Path = self.wiki_dir / "preguntas"
 
         # Legacy aliases (to avoid breaking old code if used)
-        self.inbox_dir: Path = self.captures_dir
-        self.raw_dir: Path = self.captures_dir
-        self.wiki_dir: Path = self.knowledge_map_dir
+        self.knowledge_map_dir = self.wiki_dir
+        self.captures_dir = self.inbox_dir
         self.summaries_dir: Path = self.descubrimientos_dir
         self.runs_dir: Path = self.descubrimientos_dir
 

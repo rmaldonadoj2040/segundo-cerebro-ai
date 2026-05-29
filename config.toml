@@ -8,8 +8,13 @@ translate_english_inputs = true
 preserve_key_terms = true
 
 [paths]
-captures = "data/capturas"
-knowledge_map = "vault"
+inbox = "data/inbox"
+raw = "data/raw"
+wiki = "data/wiki"
+conceptos_dir = "data/wiki/conceptos"
+tensiones_dir = "data/wiki/tensiones"
+insights_dir = "data/wiki/insights"
+preguntas_dir = "data/wiki/preguntas"
 outputs = "outputs"
 archive_originals = "data/archivo/originales"
 archive_normalized = "data/archivo/normalizado"
@@ -33,11 +38,11 @@ max_retries = 2
 [wiki]
 max_context_chars = 4000
 required_sections = [
-    "## Idea central",
+    "## Qué significa",
     "## Por qué importa",
-    "## Cómo funciona",
-    "## Tensiones relacionadas",
-    "## Conexiones con otros conceptos",
+    "## Conexiones",
+    "## Insight clave",
+    "## Pregunta abierta",
     "## Fuentes",
 ]
 min_page_words = 30

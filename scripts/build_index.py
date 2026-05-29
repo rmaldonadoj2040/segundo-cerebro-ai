@@ -1,16 +1,13 @@
 """Build vault dashboards and the cinematic graph configuration.
 
-The graph has five visible node types — concepto / autor / libro / tecnologia /
-tension — one folder each.  Insights and open questions are NOT nodes: they are
-embedded as text inside the dashboard files.
+The graph has seven visible node folders: conceptos / autores / libros /
+tecnologias / tensiones / insights / preguntas.
 
 Dashboard files (vault root, hidden from the Graph View):
-  - ``Inicio.md``              — landing page: every node grouped by type,
-                                 plus embedded insights and questions.
-  - ``indice_de_temas.md``     — index of all nodes by type.
-  - ``indice_de_fuentes.md``   — which capture produced which node.
-  - ``resumen_de_insights.md`` — embedded insights.
-  - ``preguntas_abiertas.md``  — embedded open questions.
+  - ``topics_index.md``        — landing page: every node grouped by type.
+  - ``sources_index.md``       — which capture produced which node.
+  - ``insights_summary.md``    — list of generated insights.
+  - ``open_questions.md``      — list of open questions.
   - ``Capturas.md``            — onboarding note.
 
 ``ensure_graph_config`` writes ``.obsidian/graph.json`` with per-type colour
@@ -36,12 +33,11 @@ from app.file_utils import ensure_project_dirs, list_markdown_files, read_text, 
 LOGGER = logging.getLogger(__name__)
 
 DASHBOARD_NAMES = (
-    "Inicio",
+    "topics_index",
     "Capturas",
-    "indice_de_temas",
-    "indice_de_fuentes",
-    "resumen_de_insights",
-    "preguntas_abiertas",
+    "sources_index",
+    "insights_summary",
+    "open_questions",
 )
 _DASHBOARD_FILES = frozenset(f"{n.lower()}.md" for n in DASHBOARD_NAMES)
 
@@ -52,6 +48,8 @@ ENTITY_LAYOUT: list[tuple[str, str, str]] = [
     ("libro", "libros", "Libros e ideas"),
     ("tecnologia", "tecnologias", "Tecnologías"),
     ("tension", "tensiones", "Tensiones"),
+    ("insight", "insights", "Insights"),
+    ("pregunta", "preguntas", "Preguntas"),
 ]
 
 # Per-type node colours for the Obsidian Graph View (decimal RGB).
@@ -61,6 +59,8 @@ GRAPH_COLORS: list[tuple[str, int]] = [
     ("path:libros/", 0x5BA86B),       # green  — books / historical ideas
     ("path:tecnologias/", 0xD9614F),  # coral  — technologies / platforms
     ("path:tensiones/", 0x9C6FCB),    # purple — philosophical tensions
+    ("path:insights/", 0x4CAF50),     # green  — insights
+    ("path:preguntas/", 0xF44336),    # red    — preguntas
 ]
 
 _SOURCE_LINE_RE = re.compile(r"[-*]\s+([^\n]+\.(?:md|markdown))", re.IGNORECASE)
@@ -148,14 +148,10 @@ def build_indices(
     *,
     registry: ConceptRegistry,
     knowledge_map_dir: Path | None = None,
-    insights: list[dict] | None = None,
-    questions: list[dict] | None = None,
 ) -> None:
     ensure_project_dirs()
     cfg = _cfg()
-    knowledge_map_dir = knowledge_map_dir or cfg.knowledge_map_dir
-    insights = insights or []
-    questions = questions or []
+    knowledge_map_dir = knowledge_map_dir or cfg.wiki_dir
 
     # Collect entity files per type.
     by_type: dict[str, list[Path]] = {}
@@ -187,19 +183,30 @@ def build_indices(
     def _link(path: Path) -> str:
         return _entity_link(registry, path, titles[path], knowledge_map_dir)
 
-    # ── indice_de_temas.md ─────────────────────────────────────────────────
-    topics = ["# Índice de Temas\n"]
+    # ── topics_index.md ──────────────────────────────────────────────────────────
+    inicio: list[str] = [
+        "# Índice de Temas\n",
+        "Mapa vivo del pensamiento contemporáneo, generado a partir de las capturas.",
+        "El Graph View muestra conceptos, autores, libros, tecnologías, "
+        "tensiones, insights y preguntas.\n",
+    ]
     for note_type, _folder, label in ENTITY_LAYOUT:
-        files = by_type[note_type]
+        files = by_type.get(note_type, [])
         if not files:
             continue
-        topics.append(f"## {label}")
+        inicio.append(f"## {label}")
         for path in files:
-            topics.append(f"- {_link(path)}")
-        topics.append("")
-    write_text(knowledge_map_dir / "indice_de_temas.md", "\n".join(topics).rstrip() + "\n")
+            star = " ★" if titles[path].lower() in hub_keys else ""
+            inicio.append(f"- {_link(path)}{star}")
+        inicio.append("")
 
-    # ── indice_de_fuentes.md ───────────────────────────────────────────────
+    inicio.append("## Cómo navegar")
+    inicio.append("- ★ marca los conceptos *hub*: los nodos centrales del mapa.")
+    inicio.append("- Revisa [[sources_index|Índice de fuentes]] para trazar cada idea.")
+    inicio.append("- En el Graph View, cada color es un tipo de nodo.")
+    write_text(knowledge_map_dir / "topics_index.md", "\n".join(inicio).rstrip() + "\n")
+
+    # ── sources_index.md ───────────────────────────────────────────────
     source_map: dict[str, list[Path]] = defaultdict(list)
     for files in by_type.values():
         for path in files:
@@ -215,75 +222,27 @@ def build_indices(
         sources_content = "\n".join(lines).rstrip() + "\n"
     else:
         sources_content = "# Índice de Fuentes\n\n_No se encontraron fuentes._\n"
-    write_text(knowledge_map_dir / "indice_de_fuentes.md", sources_content)
+    write_text(knowledge_map_dir / "sources_index.md", sources_content)
 
-    # ── resumen_de_insights.md ─────────────────────────────────────────────
+    # ── insights_summary.md ─────────────────────────────────────────────
     lines = ["# Resumen de Insights\n"]
-    if insights:
-        for item in insights:
-            lines.append(f"## {item['title']}")
-            lines.append(item["description"])
-            related = _related_inline(registry, item.get("related", []))
-            if related:
-                lines.append(f"\n**Conceptos relacionados:** {related}")
-            lines.append("")
+    insights_files = by_type.get("insight", [])
+    if insights_files:
+        for path in insights_files:
+            lines.append(f"- {_link(path)}")
     else:
         lines.append("_No se generaron insights._")
-    write_text(knowledge_map_dir / "resumen_de_insights.md", "\n".join(lines).rstrip() + "\n")
+    write_text(knowledge_map_dir / "insights_summary.md", "\n".join(lines).rstrip() + "\n")
 
-    # ── preguntas_abiertas.md ──────────────────────────────────────────────
+    # ── open_questions.md ──────────────────────────────────────────────
     lines = ["# Preguntas Abiertas\n"]
-    if questions:
-        for item in questions:
-            lines.append(f"## {item['title']}")
-            lines.append(item["question"])
-            related = _related_inline(registry, item.get("related", []))
-            if related:
-                lines.append(f"\n**Conceptos relacionados:** {related}")
-            lines.append("")
+    preguntas_files = by_type.get("pregunta", [])
+    if preguntas_files:
+        for path in preguntas_files:
+            lines.append(f"- {_link(path)}")
     else:
         lines.append("_No se generaron preguntas abiertas._")
-    write_text(knowledge_map_dir / "preguntas_abiertas.md", "\n".join(lines).rstrip() + "\n")
-
-    # ── Inicio.md ──────────────────────────────────────────────────────────
-    inicio: list[str] = [
-        "# Inicio\n",
-        "Mapa vivo del pensamiento contemporáneo, generado a partir de las capturas.",
-        "El Graph View muestra cinco tipos de nodo: conceptos, autores, libros, "
-        "tecnologías y tensiones.\n",
-    ]
-    for note_type, _folder, label in ENTITY_LAYOUT:
-        files = by_type[note_type]
-        if not files:
-            continue
-        inicio.append(f"## {label}")
-        for path in files:
-            star = " ★" if titles[path].lower() in hub_keys else ""
-            inicio.append(f"- {_link(path)}{star}")
-        inicio.append("")
-
-    inicio.append("## Insights destacados")
-    if insights:
-        for item in insights:
-            inicio.append(f"- **{item['title']}**: {item['description']}")
-    else:
-        inicio.append("_Sin insights._")
-    inicio.append("")
-
-    inicio.append("## Preguntas abiertas")
-    if questions:
-        for item in questions:
-            inicio.append(f"- **{item['title']}**: {item['question']}")
-    else:
-        inicio.append("_Sin preguntas._")
-    inicio.append("")
-
-    inicio.append("## Cómo navegar")
-    inicio.append("- ★ marca los conceptos *hub*: los nodos centrales del mapa.")
-    inicio.append("- Abre [[indice_de_temas|Índice de temas]] para ver todo por tipo.")
-    inicio.append("- Revisa [[indice_de_fuentes|Índice de fuentes]] para trazar cada idea.")
-    inicio.append("- En el Graph View, cada color es un tipo de nodo.")
-    write_text(knowledge_map_dir / "Inicio.md", "\n".join(inicio).rstrip() + "\n")
+    write_text(knowledge_map_dir / "open_questions.md", "\n".join(lines).rstrip() + "\n")
 
     # ── Capturas.md ────────────────────────────────────────────────────────
     write_text(
@@ -292,9 +251,9 @@ def build_indices(
             "# Capturas\n\n"
             "Coloca aquí notas crudas, enlaces o transcripciones antes de correr el pipeline.\n\n"
             "## Flujo\n"
-            "- Agrega archivos Markdown en `data/capturas/`.\n"
+            "- Agrega archivos Markdown en `data/inbox/`.\n"
             "- Ejecuta `python3 scripts/run_daily.py`.\n"
-            "- Abre [[Inicio]] para explorar el mapa generado.\n"
+            "- Abre [[topics_index]] para explorar el mapa generado.\n"
         ),
     )
 
@@ -310,9 +269,9 @@ def main() -> None:
             registry.register(
                 title, note_type=note_type, dir_path=cfg.knowledge_map_dir / folder
             )
-    build_indices(registry=registry)
+    build_indices(registry=registry, knowledge_map_dir=cfg.wiki_dir)
     registry.repair_vault()
-    ensure_graph_config(cfg.knowledge_map_dir)
+    ensure_graph_config(cfg.wiki_dir)
     LOGGER.info("Index building complete.")
 
 

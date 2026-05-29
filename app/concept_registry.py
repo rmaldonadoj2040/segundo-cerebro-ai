@@ -176,6 +176,8 @@ class ConceptRegistry:
         # full content threshold — they just need to exist and have body.
         if note_type == "indice":
             return len(body) > 0
+        if note_type in {"insight", "pregunta"}:
+            return len(body) >= 50
         return len(body) >= MIN_CONTENT_CHARS
 
     def authorized_entries(self) -> list[ConceptEntry]:
@@ -185,7 +187,7 @@ class ConceptRegistry:
             if entry.path in seen:
                 continue
             seen.add(entry.path)
-            if self._has_real_content(entry.path):
+            if self._has_real_content(entry.path, entry.note_type):
                 out.append(entry)
         return out
 
@@ -204,7 +206,7 @@ class ConceptRegistry:
         display = (alias or target_clean).strip()
 
         entry = self.lookup(target_clean)
-        if entry is None or not self._has_real_content(entry.path):
+        if entry is None or not self._has_real_content(entry.path, entry.note_type):
             return display  # plain text — no ghost link
         rel = entry.relative_to(self.vault_dir)
         link_target = f"{rel}#{section}" if section else rel

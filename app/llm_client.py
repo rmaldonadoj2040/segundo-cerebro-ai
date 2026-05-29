@@ -237,6 +237,69 @@ def _mock_response(prompt: str) -> str:
         topic = topic_match.group(1).strip() if topic_match else "Concepto de Prueba"
         sources = _extract_sources(prompt) or ["captura.md"]
         source_lines = "\n".join(f"- {source}" for source in sources)
+        connections = (
+            "- [[Mente extendida]]\n"
+            "- [[Economía de la atención]]\n"
+            "- [[Creatividad asistida por IA]]"
+        )
+        common_sources = f"## Fuentes\n{source_lines}\n"
+
+        if "nota de autor" in prompt_lower:
+            return (
+                f"# {topic}\n\n"
+                "## Quién es\n"
+                f"{topic} aparece en el mapa como una figura útil para pensar la relación entre herramientas, memoria y criterio. "
+                "No se presenta como una biografía cerrada, sino como un punto de entrada para entender cómo ciertas ideas viajan entre cultura, tecnología y hábitos cognitivos.\n\n"
+                "Su relevancia está en que ayuda a leer las fuentes como una conversación: cada captura ilumina una parte del problema, desde la atención hasta la creatividad mediada por sistemas digitales.\n\n"
+                "## Idea central\n"
+                "La idea central es que pensar nunca ocurre en aislamiento puro. Las herramientas externas, los formatos de archivo, los motores de búsqueda y las notas personales también moldean lo que recordamos, conectamos y decidimos conservar.\n\n"
+                "Cuando esa mediación se vuelve invisible, el usuario puede confundir comodidad con comprensión. Por eso el autor funciona como una alerta: el segundo cerebro debe ampliar el criterio, no sustituirlo.\n\n"
+                "## Conexiones\n"
+                f"{connections}\n\n"
+                f"{common_sources}"
+            )
+
+        if "nota de libro" in prompt_lower:
+            return (
+                f"# {topic}\n\n"
+                "## Qué propone\n"
+                f"{topic} funciona aquí como una obra o idea histórica que organiza una preocupación recurrente: qué ocurre cuando delegamos memoria, atención o producción intelectual en sistemas externos.\n\n"
+                "La propuesta no se reduce a una técnica. Señala que cada infraestructura de conocimiento cambia la forma de pensar, seleccionar y recordar.\n\n"
+                "## Por qué importa\n"
+                "Importa porque el proyecto necesita algo más que acumulación de notas. Necesita fuentes que ayuden a distinguir entre archivo pasivo y mapa vivo, entre guardar información y construir entendimiento.\n\n"
+                "También importa porque ofrece contexto: muchas tensiones actuales sobre IA, productividad y atención ya estaban anticipadas en discusiones anteriores sobre lectura, memoria y medios.\n\n"
+                "## Conexiones\n"
+                f"{connections}\n\n"
+                f"{common_sources}"
+            )
+
+        if "nota de tecnología" in prompt_lower:
+            return (
+                f"# {topic}\n\n"
+                "## Qué es\n"
+                f"{topic} es una tecnología o plataforma que participa en la organización contemporánea de la atención y la memoria. En las fuentes aparece menos como herramienta neutral y más como ambiente que orienta hábitos.\n\n"
+                "## Efecto cognitivo\n"
+                "Su efecto principal es redistribuir esfuerzo: facilita encontrar, producir o conectar información, pero también puede debilitar la pausa necesaria para evaluar qué vale la pena conservar.\n\n"
+                "La pregunta no es si la herramienta es buena o mala, sino qué tipo de pensamiento favorece cuando se vuelve parte del flujo diario.\n\n"
+                "## Conexiones\n"
+                f"{connections}\n\n"
+                f"{common_sources}"
+            )
+
+        if "nota de tensión" in prompt_lower:
+            return (
+                f"# {topic}\n\n"
+                "## La tensión\n"
+                f"{topic} nombra una oposición real dentro del sistema: una parte busca velocidad, comodidad o automatización; la otra exige profundidad, criterio y autonomía. Ambas fuerzas son valiosas, pero se estorban cuando una domina a la otra.\n\n"
+                "## Polo A\n"
+                "El primer polo defiende la reducción de fricción. Permite avanzar más rápido, ordenar más material y convertir información dispersa en estructuras navegables.\n\n"
+                "## Polo B\n"
+                "El segundo polo recuerda que no toda fricción es desperdicio. A veces la dificultad es precisamente lo que produce comprensión, voz propia y juicio más fino.\n\n"
+                "## Conexiones\n"
+                f"{connections}\n\n"
+                f"{common_sources}"
+            )
+
         return (
             f"# {topic}\n\n"
             "## Qué significa\n"

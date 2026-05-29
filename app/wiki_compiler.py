@@ -1,8 +1,8 @@
-"""Ontology compiler — turns capturas into a 5-type cultural knowledge map.
+"""Ontology compiler — turns captures into a typed cultural knowledge map.
 
 Node ontology
 -------------
-The vault is built from five entity types, each its own folder / graph cluster:
+The vault is built from typed entity notes, each in its own folder / graph cluster:
 
   - ``concepto``    — abstract ideas (the hubs of the graph)
   - ``autor``       — thinkers
@@ -18,8 +18,8 @@ Pipeline
 2. **compile_entity_notes** — each registered entity becomes a real Markdown
    note.  The prompt embeds the authorized link list so the LLM may only emit
    ``[[wikilinks]]`` toward known entities.
-3. **generate_insights / generate_questions** — return plain data that the
-   index builder embeds into dashboards (they never become graph nodes).
+3. **generate_insights / generate_questions** — create lightweight insight and
+   question notes so they are navigable from Obsidian indices.
 
 After every write the caller runs ``registry.repair_vault()`` so no surviving
 ``[[wikilink]]`` points at a missing or empty file.
@@ -131,6 +131,26 @@ def links_only_in_connections(body: str) -> str:
             in_connections = stripped.lower().startswith("## conexiones")
         out.append(line if in_connections else _wikilink_to_plain(line))
     return "\n".join(out)
+
+
+def strip_self_links(body: str, entry: ConceptEntry, vault_dir: Path) -> str:
+    """Demote links that point back to the note itself."""
+    self_keys = {
+        canonical_key(entry.name),
+        canonical_key(entry.slug),
+        canonical_key(entry.relative_to(vault_dir)),
+    }
+
+    def _replace(match: re.Match[str]) -> str:
+        inner = match.group(1)
+        target, alias = inner.split("|", 1) if "|" in inner else (inner, None)
+        target_clean = target.split("#", 1)[0].strip()
+        display = (alias or target_clean).strip()
+        if canonical_key(target_clean) in self_keys:
+            return display
+        return match.group(0)
+
+    return _WIKILINK_RE.sub(_replace, body)
 
 
 def _load_prompt(name: str) -> str:
@@ -322,6 +342,7 @@ def compile_entity_notes(
         body = _ensure_h1(result.strip(), entry.name)
         # Graph edges come only from the Conexiones section — strip the rest.
         body = links_only_in_connections(body)
+        body = strip_self_links(body, entry, registry.vault_dir)
         if len(body) < min_chars:
             LOGGER.warning(
                 "%s %s produced only %d chars (need %d); skipping.",
@@ -389,7 +410,7 @@ def _related_authorized_concepts(
     return chosen[:count]
 
 
-def generate_insights(registry: ConceptRegistry) -> list[dict]:
+def generate_insights_from_concepts(registry: ConceptRegistry, output_dir: Path) -> list[Path]:
     summaries = _concept_summary_block(registry)
     if not summaries:
         return []
@@ -404,17 +425,23 @@ def generate_insights(registry: ConceptRegistry) -> list[dict]:
     except Exception as exc:
         LOGGER.error("Insight generation failed: %s", exc)
         return []
-    out = []
+    out: list[Path] = []
+    cfg = _cfg()
+    output_dir.mkdir(parents=True, exist_ok=True)
     for title, desc in _parse_titled_lines(response)[:5]:
-        out.append({
-            "title": title,
-            "description": desc,
-            "related": _related_authorized_concepts(registry, desc),
-        })
+        content = _ensure_h1(desc, title)
+        related = _related_authorized_concepts(registry, desc)
+        if related:
+            content += "\n\n## Conexiones\n" + "\n".join(f"- [[{r}]]" for r in related)
+
+        file_path = output_dir / f"{title}.md"
+        write_text(file_path, _generate_frontmatter("insight", cfg) + content + "\n")
+        registry.register_path(title, note_type="insight", file_path=file_path)
+        out.append(file_path)
     return out
 
 
-def generate_questions(registry: ConceptRegistry) -> list[dict]:
+def generate_questions_from_concepts(registry: ConceptRegistry, output_dir: Path) -> list[Path]:
     summaries = _concept_summary_block(registry)
     if not summaries:
         return []
@@ -428,13 +455,23 @@ def generate_questions(registry: ConceptRegistry) -> list[dict]:
     except Exception as exc:
         LOGGER.error("Question generation failed: %s", exc)
         return []
-    out = []
+    out: list[Path] = []
+    cfg = _cfg()
+    output_dir.mkdir(parents=True, exist_ok=True)
     for title, question in _parse_titled_lines(response)[:5]:
         if not question.endswith("?"):
             continue
-        out.append({
-            "title": title,
-            "question": question,
-            "related": _related_authorized_concepts(registry, question, count=2),
-        })
+        content = _ensure_h1(question, title)
+        related = _related_authorized_concepts(registry, question, count=2)
+        if related:
+            content += "\n\n## Conexiones\n" + "\n".join(f"- [[{r}]]" for r in related)
+
+        file_path = output_dir / f"{title}.md"
+        write_text(file_path, _generate_frontmatter("pregunta", cfg) + content + "\n")
+        registry.register_path(title, note_type="pregunta", file_path=file_path)
+        out.append(file_path)
     return out
+
+def generate_tensions_from_concepts(registry: ConceptRegistry, output_dir: Path) -> list[Path]:
+    """Fallback for tension generation if not handled by plan_ontology."""
+    return []
